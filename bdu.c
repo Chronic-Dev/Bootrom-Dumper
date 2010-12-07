@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
 	
 	// 1. Initialisation of the USB connection with the device in DFU
 	libusb_init(&context);
-	libusb_set_debug(NULL, 3);
+	//libusb_set_debug(NULL, 3);
 	handle = usb_init(context, WTF_MODE);
 	if (handle == NULL) {
 		printf("[X] Please connect your iDevice in _DFU_ mode.\n");
