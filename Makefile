@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS_OSX = -lusb-1.0 -framework CoreFoundation -framework IOKit
+CFLAGS_OSX = -lusb-1.0 -framework CoreFoundation -framework IOKit -I./include
 CFLAGS_LNX =  -lusb-1.0
 
 all:

