@@ -4,9 +4,11 @@
 @constants -----------------------------------
 .pool
 @ usb_wait_for_image call offset
-.set	RET_ADDR,			0x7ef	@ A4
+@ these are defined in device_def.S (created by make)
+@.set	RET_ADDR,			0x7ef	@ A4
 @.set	RET_ADDR,			0x8b7	@ iPod 3G
 @.set	RET_ADDR,			0x8b7	@ iPhone 3Gs new bootrom
+.include "device_def.S"
 
 .set	loadaddr,			0x84000000
 .set	maxsize,			0x24000
