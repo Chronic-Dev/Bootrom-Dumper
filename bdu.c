@@ -10,8 +10,6 @@
 #include <stdlib.h>
 #include <libusb-1.0/libusb.h>
 #ifdef __APPLE__
-#define USB_MAXENDPOINTS 32
-#define USB_MAXINTERFACES 32
 #include "darwin_usb.h"
 #endif
 
@@ -162,7 +160,7 @@ int main(int argc, char *argv[]) {
 	#define DARWIN_CACHED_DEVICE(a) ((struct darwin_cached_device *) (((struct darwin_device_priv *)((a)->os_priv))->dev))
 	// pod2g: dirty hack for limera1n support.
 	IOReturn kresult;
-	IOUSBDevRequest req;
+	IOUSBDevRequestTO req;
 	bzero(&req, sizeof(req));
 	//struct darwin_device_handle_priv *priv = (struct darwin_device_handle_priv *)client->handle->os_priv;
 	struct darwin_cached_device *dpriv = DARWIN_CACHED_DEVICE(handle->dev);
