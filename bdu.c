@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <libusb-1.0/libusb.h>
 #ifdef __APPLE__
+#define USB_MAXENDPOINTS 32
+#define USB_MAXINTERFACES 32
 #include "darwin_usb.h"
 #endif
 
@@ -89,6 +91,7 @@ struct libusb_device_handle* usb_wait_device_connection(struct libusb_context* c
         sleep(2);
         usb_close(handle);
         handle = usb_init(context, WTF_MODE);
+        return handle;
 }
 
 int readfile(char *filename, void* buffer, unsigned int skip) {

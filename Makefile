@@ -1,9 +1,7 @@
-CC = gcc
-
 CFLAGS = -lusb-1.0
 
 ifeq ($(ARCH),mac)
-CFLAGS += -framework CoreFoundation -framework IOKit -I./include
+CFLAGS += -framework CoreFoundation -framework IOKit -I include
 endif
 
 ifeq ($(DEVICE),a4)
@@ -25,10 +23,19 @@ ifndef DEVICE_DEF
 $(error You must define the device type by specifying DEVICE=< a4 | 3g | 3gs_new_bootrom > in your make invocation)
 endif
 
-all:
-		$(CC) bdu.c -o bdu $(CFLAGS) $(DEVICE_DEF)
-		
-		arm-elf-as -mthumb --fatal-warnings -o payload.o payload.S
-		arm-elf-objcopy -O binary  payload.o payload.bin
-		rm payload.o device_def.S
 
+all: bdu payload.bin
+
+.PHONY: clean
+
+clean:
+	rm -f payload.o payload.bin device_def.S bdu
+
+payload.o: payload.S device_def.S
+	ecc -target thumbv7-none-engeabihf -Werror -c -o $@ $<
+
+payload.bin: payload.o
+	ecc-objcopy -O binary $^ $@
+
+bdu: bdu.c
+	$(CC) -o $@ $(CFLAGS) $(DEVICE_DEF) $^

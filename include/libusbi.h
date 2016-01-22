@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <time.h>
 
-#include "libusb.h"
+#include <libusb-1.0/libusb.h>
 #include "threads_posix.h"
 
 /* Inside the libusb code, mark all public functions as follows:

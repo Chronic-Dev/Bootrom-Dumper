@@ -1,4 +1,5 @@
 bdu
 payload.bin
+payload.o
 device_def.S
 bootrom.bin
