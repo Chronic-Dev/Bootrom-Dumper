@@ -1,4 +1,5 @@
 bdu
+bdu.dSYM
 payload.bin
 payload.o
 device_def.S

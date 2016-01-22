@@ -1,4 +1,4 @@
-CFLAGS = -lusb-1.0
+CFLAGS = -lusb-1.0 -g
 
 ifeq ($(ARCH),mac)
 CFLAGS += -framework CoreFoundation -framework IOKit -I include
